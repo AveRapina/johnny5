@@ -44,8 +44,6 @@ int main(void)
 	cout<<"Input any number to terminate program:";
 	cin>>speed;
 
-	motorTerminate();
-
 	while (1)
 	{
 		mpu6050_read_gyro();
@@ -71,10 +69,14 @@ int main(void)
 		
 	    cout<<"Magnetic:";
 	    hmc5883l_read_magnetic();
-		//cout<<endl;
-		//delayms(500);
+		cout << "\tX:" << (float)hmc5883l.Magnetic.x/100;
+		cout << "\tY:" << (float)hmc5883l.Magnetic.y/100;
+		cout << "\tZ:" << (float)hmc5883l.Magnetic.z/100;
+		cout << "\tAngle\tZ:" << (float)hmc5883l.Angle/100<<"\r";
 	}
 
+	motorTerminate();
+	return 0;
 }
 
 

@@ -223,7 +223,4 @@ void hmc5883l_read_magnetic(void)
 	{
 		hmc5883l.Angle = hmc5883l.Angle - 360;
 	}
-
-	printf("Magn Values: x=%d,y=%d,z=%d\r\n", hmc5883l.Magnetic.x, hmc5883l.Magnetic.y,	hmc5883l.Magnetic.z);
-	printf("Angle=%f\r\n", hmc5883l.Angle);
 }

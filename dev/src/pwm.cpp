@@ -36,7 +36,7 @@ void motorInit()
 	motorL.dutyCycle = PWM_DUTY_CYCLE_SET;
 	motorR.dutyCycle = PWM_DUTY_CYCLE_SET;
 
-	gpioInitialise();	//Initialise pigpio
+	//gpioInitialise();	//Initialise pigpio
 
 	pwmInit(&motorL);
 	pwmInit(&motorR);

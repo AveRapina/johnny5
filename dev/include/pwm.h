@@ -54,5 +54,6 @@ extern void motorSetSpeed(pMOTOR p, int32_t speed);	//Set motor speed
 extern void motorSetDirectionPostive(pMOTOR p);
 extern void motorSetDirectionNegtive(pMOTOR p);
 extern void motorSetDutyCycle(pMOTOR p, float dutyCycle);
+extern void motorTerminate();
 
 #endif /* DEV_INCLUDE_PWM_H_ */
