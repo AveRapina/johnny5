@@ -21,6 +21,31 @@ int main(void)
 
 	//ms5611_init();
 
+	int speed;
+
+	motorInit();
+
+	cout<<"Input speed of left motor:";
+	cin>>speed;
+
+	motorSetSpeed(&motorL, speed);
+
+	cout<<"Input speed of right motor:";
+	cin>>speed;
+
+	motorSetSpeed(&motorR, speed);
+	motorEnable(&motorR);
+
+	cout<<"Input speed of right motor:";
+	cin>>speed;
+
+	motorSetSpeed(&motorR, speed);
+
+	cout<<"Input any number to terminate program:";
+	cin>>speed;
+
+	motorTerminate();
+
 	while (1)
 	{
 		mpu6050_read_gyro();

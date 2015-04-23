@@ -19,6 +19,7 @@
 #include "mpu6050.h"
 #include "hmc5883l.h"
 //#include "ms5611.h"
+#include "pwm.h"
 
 
 #endif /* INCLUDE_HEADER_H_ */
