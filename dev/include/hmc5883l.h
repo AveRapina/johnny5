@@ -36,12 +36,14 @@ typedef struct _THREE_AXIS_INT
 	int z;
 }THREE_AXIS_INT,*pTHREE_AXIS_INT;
 
+#if 0
 typedef struct _THREE_AXIS_FLOAT
 {
 	float x;
 	float y;
 	float z;
 }THREE_AXIS_FLOAT,*pTHREE_AXIS_FLOAT;
+#endif
 
 typedef struct _HMC5883L
 {

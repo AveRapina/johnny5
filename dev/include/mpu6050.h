@@ -45,12 +45,19 @@
 #define	PWR_MGMT_1		0x6B	//电源管理，典型值：0x00(正常启用)
 #define	WHO_AM_I		0x75	//IIC地址寄存器(默认数值0x68，只读)
 
-typedef struct _THREE_AXIS
+typedef struct _THREE_AXIS_INT16
 {
 	uint16_t x;
 	uint16_t y;
 	uint16_t z;
-}THREE_AXIS,*pTHREE_AXIS;
+}THREE_AXIS_INT16,*pTHREE_AXIS_INT16;
+
+typedef struct _THREE_AXIS_FLOAT
+{
+	float x;
+	float y;
+	float z;
+}THREE_AXIS_FLOAT,*pTHREE_AXIS_FLOAT;
 
 typedef struct _MPU6050
 {
@@ -58,8 +65,11 @@ typedef struct _MPU6050
 	uint8_t Data[4];  		//显示数据缓存区
 	uint8_t Buff[10];     	//接收数据缓存区
 
-	THREE_AXIS Gyro;		//X轴
-	THREE_AXIS Accel;		//X轴
+	THREE_AXIS_INT16 GyroSrc;	//陀螺仪采样原始值
+	THREE_AXIS_INT16 AccelSrc;	//加速度采样原始值
+
+	THREE_AXIS_FLOAT Gyro;		//陀螺仪数据
+	THREE_AXIS_FLOAT Accel;		//加速度数据
 
 	uint16_t Temperature;	//温度
 }MPU6050,pMPU6050;
@@ -73,5 +83,7 @@ extern void mpu6050_init(void);			//模块初始化
 extern void mpu6050_read_gyro(void);	//读取陀螺仪数据
 extern void mpu6050_read_accel(void);	//读取加速度数据
 extern void mpu6050_check_id(void);		//模块检测
+
+extern void mpu6050GetMotion6();
 
 #endif

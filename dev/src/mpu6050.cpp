@@ -6,7 +6,8 @@ MPU6050 mpu6050;
 void mpu6050_init(void);			//模块初始化
 void mpu6050_read_gyro(void);	//读取陀螺仪数据
 void mpu6050_read_accel(void);	//读取加速度数据
-void mpu6050_check_id(void);		//读取模块信息
+//void mpu6050_check_id(void);		//读取模块信息
+void mpu6050TestConnection();
 
 //模块初始化
 void mpu6050_init(void)
@@ -19,6 +20,8 @@ void mpu6050_init(void)
 
 	if (mpu6050.handle >= 0)	//若I2C打开成功
 	{
+		mpu6050TestConnection();
+
 		//初始化陀螺仪
 		i2cWriteByteData(mpu6050.handle, PWR_MGMT_1, 0x00);		//解除休眠状态
 
@@ -31,7 +34,6 @@ void mpu6050_init(void)
 		i2cWriteByteData(mpu6050.handle, GYRO_CONFIG, 0x18);
 		i2cWriteByteData(mpu6050.handle, ACCEL_CONFIG, 0x01);
 
-		mpu6050_check_id();
 	}
 	else
 	{
@@ -39,20 +41,34 @@ void mpu6050_init(void)
 	}
 }
 
-void mpu6050_check_id(void)
+void mpu6050TestConnection()
 {
 	uint8_t dev = 0;
 
+	//Get device ID
 	if (dev = i2cReadByteData(mpu6050.handle, WHO_AM_I), dev == MPU6050_ADDR)
 	{
-		printf("MPU6050 OK, ID = 0x%x\r\n", dev);
+		printf("MPU6050 I2C connection [OK], ID = 0x%x\r\n", dev);
 	}
 	else
 	{
-		printf("MPU6050 Error, ID = 0x%x\r\n", dev);
+		printf("MPU6050 I2C connection [FAIL], ID = 0x%x\r\n", dev);
 	}
 }
 
+void mpu6050GetMotion6()
+{
+	char buffer[14];
+	memset(&buffer, 0, sizeof(buffer));
+
+	i2cReadI2CBlockData(mpu6050.handle, ACCEL_XOUT_H, buffer, 14);
+	  mpu6050.AccelSrc.x = (((int16_t) buffer[0]) << 8) | buffer[1];
+	  mpu6050.AccelSrc.y = (((int16_t) buffer[2]) << 8) | buffer[3];
+	  mpu6050.AccelSrc.z = (((int16_t) buffer[4]) << 8) | buffer[5];
+	  mpu6050.GyroSrc.x = (((int16_t) buffer[8]) << 8) | buffer[9];
+	  mpu6050.GyroSrc.y = (((int16_t) buffer[10]) << 8) | buffer[11];
+	  mpu6050.GyroSrc.z = (((int16_t) buffer[12]) << 8) | buffer[13];
+}
 	
 //读取陀螺仪数据
 void mpu6050_read_gyro(void)

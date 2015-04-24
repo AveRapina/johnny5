@@ -21,6 +21,7 @@ int main(void)
 
 	//ms5611_init();
 
+#if 0
 	int speed;
 
 	motorInit();
@@ -43,20 +44,22 @@ int main(void)
 
 	cout<<"Input any number to terminate program:";
 	cin>>speed;
-
+#endif
 	while (1)
+	//for(int i=0; i<100;i++)
 	{
-		mpu6050_read_gyro();
+		mpu6050GetMotion6();
+		//mpu6050_read_gyro();
 		cout << "Gyro";
-		cout << "\tX:" << (float)mpu6050.Gyro.x/100;
-		cout << "\tY:" << (float)mpu6050.Gyro.y/100;
-		cout << "\tZ:" << (float)mpu6050.Gyro.z/100;
+		cout << "\tX:" << (float)mpu6050.GyroSrc.x;
+		cout << "\tY:" << (float)mpu6050.GyroSrc.y;
+		cout << "\tZ:" << (float)mpu6050.GyroSrc.z;
 
-		mpu6050_read_accel();
+		//mpu6050_read_accel();
 		cout << "\tAccel";
-		cout << "\tX:" << (float)mpu6050.Accel.x/100;
-		cout << "\tY:" << (float)mpu6050.Accel.y/100;
-		cout << "\tZ:" << (float)mpu6050.Accel.z/100<<"\r";
+		cout << "\tX:" << (float)mpu6050.AccelSrc.x;
+		cout << "\tY:" << (float)mpu6050.AccelSrc.y;
+		cout << "\tZ:" << (float)mpu6050.AccelSrc.z;
 
 		//delay(500);
 		//cout << "Temperature:" << mpu6050.Temperature << endl;
@@ -67,15 +70,15 @@ int main(void)
 		ms5611_get_temperature(MS5611_D2_OSR_4096);
 		*/
 		
-	    cout<<"Magnetic:";
+	    cout<<"\tMag:";
 	    hmc5883l_read_magnetic();
 		cout << "\tX:" << (float)hmc5883l.Magnetic.x/100;
 		cout << "\tY:" << (float)hmc5883l.Magnetic.y/100;
 		cout << "\tZ:" << (float)hmc5883l.Magnetic.z/100;
-		cout << "\tAngle\tZ:" << (float)hmc5883l.Angle/100<<"\r";
+		cout << "\tAngle:" << (float)hmc5883l.Angle/100<<"\r";
 	}
 
-	motorTerminate();
+	//motorTerminate();
 	return 0;
 }
 
