@@ -13,13 +13,22 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
+#include <unistd.h>
 
 #include "pigpio.h"
 
+#include "i2cdev.h"
+#include "imu_types.h"
+#include "filter.h"
 #include "mpu6050.h"
 #include "hmc5883l.h"
-//#include "ms5611.h"
+#include "ms5611.h"
+#include "sensfusion6.h"
+#include "imu.h"
 #include "pwm.h"
 
+#define TRUE (1)
+#define FALSE (0)
 
 #endif /* INCLUDE_HEADER_H_ */

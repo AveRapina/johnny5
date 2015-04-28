@@ -5,11 +5,16 @@ TARGET = johnny5
 SOURCES = ./src/main.cpp \
 		./dev/src/mpu6050.cpp \
 		./dev/src/hmc5883l.cpp \
-		./dev/src/pwm.cpp
+		./dev/src/pwm.cpp \
+		./dev/src/filter.cpp \
+		./dev/src/i2cdev.cpp \
+		./dev/src/imu.cpp \
+		./dev/src/sensfusion6.cpp
 		#./dev/src/ms5611.cpp
 
 INCLUDE = $(shell pkg-config --cflags opencv) \
 		-I./include \
+		-I./../include \
 		-I./dev/include \
 		-I/usr/local/include
 
