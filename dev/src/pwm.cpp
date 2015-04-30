@@ -71,13 +71,13 @@ void motorSetSpeed(pMOTOR p, int32_t speed)
 	if(speed > 0)
 	{
 		gpioWrite(p->gpioDIR, MOTOR_POS);
-		cout<< p->gpioPWM<< "\t"<< speed << "\t" << PWM_RANGE * p->dutyCycle <<endl;
+		//cout<< p->gpioPWM<< "\t"<< speed << "\t" << PWM_RANGE * p->dutyCycle <<endl;
 		gpioHardwarePWM(p->gpioPWM, speed, p->dutyCycle);
 	}
 	else
 	{
 		gpioWrite(p->gpioDIR, MOTOR_NEG);
-		cout<< p->gpioPWM<< "\t"<< -speed << "\t" << PWM_RANGE * p->dutyCycle <<endl;
+		//cout<< p->gpioPWM<< "\t"<< -speed << "\t" << PWM_RANGE * p->dutyCycle <<endl;
 		gpioHardwarePWM(p->gpioPWM, -speed, p->dutyCycle);
 	}
 }
@@ -89,6 +89,11 @@ void motorSpeed(int gpio, int speed, float dc)
 
 void motorTerminate()
 {
+	gpioWrite(motorL.gpioENA, MOTOR_DISABLE);
+	gpioWrite(motorL.gpioDIR, MOTOR_DISABLE);
+	gpioWrite(motorR.gpioENA, MOTOR_DISABLE);
+	gpioWrite(motorR.gpioDIR, MOTOR_DISABLE);
+
 	gpioHardwarePWM(motorL.gpioPWM, 0, 0);
 	gpioHardwarePWM(motorR.gpioPWM, 0, 0);
 	gpioTerminate();

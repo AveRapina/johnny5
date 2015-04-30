@@ -9,13 +9,13 @@
 #define DEV_INCLUDE_PWM_H_
 
 
-#define PIN_MOTOR_L_ENA (05)
-#define PIN_MOTOR_L_DIR (06)
-#define PIN_MOTOR_L_PWM (12)
+#define PIN_MOTOR_L_ENA (26)
+#define PIN_MOTOR_L_DIR (19)
+#define PIN_MOTOR_L_PWM (13)
 
-#define PIN_MOTOR_R_ENA (19)
+#define PIN_MOTOR_R_ENA (20)
 #define PIN_MOTOR_R_DIR (16)
-#define PIN_MOTOR_R_PWM (13)
+#define PIN_MOTOR_R_PWM (12)
 
 #define PWM_FREQ_L (10000)
 #define PWM_FREQ_R (10000)

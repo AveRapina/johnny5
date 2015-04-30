@@ -9,7 +9,8 @@ SOURCES = ./src/main.cpp \
 		./dev/src/filter.cpp \
 		./dev/src/i2cdev.cpp \
 		./dev/src/imu.cpp \
-		./dev/src/sensfusion6.cpp
+		./dev/src/sensfusion6.cpp \
+		./src/pid.cpp
 		#./dev/src/ms5611.cpp
 
 INCLUDE = $(shell pkg-config --cflags opencv) \

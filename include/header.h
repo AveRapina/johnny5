@@ -16,6 +16,8 @@
 #include <stdint.h>
 #include <unistd.h>
 #include <signal.h>
+#include <sys/time.h>
+//#include "timer.h"
 
 #include "pigpio.h"
 
@@ -28,8 +30,7 @@
 #include "sensfusion6.h"
 #include "imu.h"
 #include "pwm.h"
-//#include "timer.h"
-#include <sys/time.h>
+#include "pid.h"
 
 #define TRUE (1)
 #define FALSE (0)
