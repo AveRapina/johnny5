@@ -39,11 +39,6 @@
 extern PidObject pidPitch;
 extern PidObject pidSpeed;
 
-
-extern Axis3f gyro; // Gyro axis data in deg/s
-extern Axis3f acc;  // Accelerometer axis data in mG
-extern Axis3f magnetometer;  // Magnetometer axis data in testla
-
 extern float accWZ;
 extern float accMAG;
 
@@ -60,5 +55,7 @@ extern int32_t pwmOutput;
 extern void pidInit();
 extern void pidControl();
 extern void motorControl();
+
+extern void controlUpdate(union sigval v);
 
 #endif /* INCLUDE_CONTROL_H_ */

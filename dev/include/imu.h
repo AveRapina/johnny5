@@ -91,6 +91,22 @@ typedef struct
   Axis3i16   buffer[IMU_NBR_OF_BIAS_SAMPLES];
 } BiasObj;
 
+typedef struct _IMU
+{
+	Axis3f gyro;		//陀螺仪
+	Axis3f acc;			//加速度计
+	Axis3f mag;			//磁力计
+
+	EULER_ANGLE euler;	//欧拉角
+
+	QUATERNION quat;	//四元数
+
+	float accWZ;
+	float accMAG;
+} IMU, *pIMU;
+
+extern IMU imu;
+
 void imu6Init(void);
 bool imu6Test(void);
 void imu6Read(Axis3f* gyro, Axis3f* acc);
@@ -99,6 +115,7 @@ bool imu6IsCalibrated(void);
 bool imuHasBarometer(void);
 bool imuHasMangnetometer(void);
 
-
+extern void imuUpdate();
+extern void printImuData();
 
 #endif /* IMU_H_ */

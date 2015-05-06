@@ -69,6 +69,8 @@ int __attribute__((used)) __errno;
 
 static bool isInit;
 
+IMU imu;		//传感器数据汇总
+
 void imu6Init(void)
 {
   if(isInit)
@@ -460,3 +462,31 @@ static void imuAccAlignToGravity(Axis3i16* in, Axis3i16* out)
   out->z = ry.z;
 }
 
+void imuUpdate()
+{
+	imu9Read(&imu.gyro, &imu.acc, &imu.mag);	//读取9轴数据
+
+	// 250HZ
+	sensfusion6UpdateQ(imu.gyro, imu.acc, FUSION_UPDATE_DT);	//数据融合 更新四元数
+	sensfusion6GetEulerRPY(&imu.euler);			//计算欧拉角
+
+	imu.accWZ = sensfusion6GetAccZWithoutGravity(imu.acc);	//计算Z轴加速度
+	imu.accMAG = (imu.acc.x * imu.acc.x) + (imu.acc.y * imu.acc.y) + (imu.acc.z * imu.acc.z);
+}
+
+using namespace std;
+
+void printImuData()
+{
+#if 0
+	printf("gyro x:%10f y:%10f z:%12f\t", gyro.x, gyro.y, gyro.z);
+	printf("acc x:%10f y:%10f z:%12f\t", acc.x, acc.y, acc.z);
+	printf("mag x:%10f y:%10f z:%12f\r", mag.x, mag.y, mag.z);
+#endif
+
+	//printf("Roll:%6.3f Pitch:%6.3f Yaw:%6.3f\t", imu.euler.roll, imu.euler.pitch, imu.euler.yaw);
+
+	cout << "Roll:"<<fixed<<setw(8)<<setprecision(3)<<imu.euler.roll<<"  ";
+	cout << "Pitch:"<<fixed<<setw(8)<<setprecision(3)<<imu.euler.pitch<<"  ";
+	cout << "Yaw:"<<fixed<<setw(8)<<setprecision(3)<<imu.euler.yaw<<endl;
+}

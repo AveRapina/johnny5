@@ -135,25 +135,26 @@ void sensfusion6UpdateQ(float gx, float gy, float gz, float ax, float ay, float 
 // Date     Author      Notes
 // 29/09/2011 SOH Madgwick    Initial release
 // 02/10/2011 SOH Madgwick  Optimised for reduced CPU load
-void sensfusion6UpdateQ(float gx, float gy, float gz, float ax, float ay, float az, float dt)
+//void sensfusion6UpdateQ(float gx, float gy, float gz, float ax, float ay, float az, float dt)
+void sensfusion6UpdateQ(Axis3f gyro, Axis3f acc, float dt)
 {
   float recipNorm;
   float halfvx, halfvy, halfvz;
   float halfex, halfey, halfez;
   float qa, qb, qc;
 
-  gx = gx * M_PI / 180;
-  gy = gy * M_PI / 180;
-  gz = gz * M_PI / 180;
+  gyro.x = gyro.x * M_PI / 180;
+  gyro.y = gyro.y * M_PI / 180;
+  gyro.z = gyro.z * M_PI / 180;
 
   // Compute feedback only if accelerometer measurement valid (avoids NaN in accelerometer normalisation)
-  if(!((ax == 0.0f) && (ay == 0.0f) && (az == 0.0f)))
+  if(!((acc.x == 0.0f) && (acc.y == 0.0f) && (acc.z == 0.0f)))
   {
     // Normalise accelerometer measurement
-    recipNorm = invSqrt(ax * ax + ay * ay + az * az);
-    ax *= recipNorm;
-    ay *= recipNorm;
-    az *= recipNorm;
+    recipNorm = invSqrt(acc.x * acc.x + acc.y * acc.y + acc.z * acc.z);
+    acc.x *= recipNorm;
+    acc.y *= recipNorm;
+    acc.z *= recipNorm;
 
     // Estimated direction of gravity and vector perpendicular to magnetic flux
     halfvx = q1 * q3 - q0 * q2;
@@ -161,9 +162,9 @@ void sensfusion6UpdateQ(float gx, float gy, float gz, float ax, float ay, float 
     halfvz = q0 * q0 - 0.5f + q3 * q3;
 
     // Error is sum of cross product between estimated and measured direction of gravity
-    halfex = (ay * halfvz - az * halfvy);
-    halfey = (az * halfvx - ax * halfvz);
-    halfez = (ax * halfvy - ay * halfvx);
+    halfex = (acc.y * halfvz - acc.z * halfvy);
+    halfey = (acc.z * halfvx - acc.x * halfvz);
+    halfez = (acc.x * halfvy - acc.y * halfvx);
 
     // Compute and apply integral feedback if enabled
     if(twoKi > 0.0f)
@@ -171,9 +172,9 @@ void sensfusion6UpdateQ(float gx, float gy, float gz, float ax, float ay, float 
       integralFBx += twoKi * halfex * dt;  // integral error scaled by Ki
       integralFBy += twoKi * halfey * dt;
       integralFBz += twoKi * halfez * dt;
-      gx += integralFBx;  // apply integral feedback
-      gy += integralFBy;
-      gz += integralFBz;
+      gyro.x += integralFBx;  // apply integral feedback
+      gyro.y += integralFBy;
+      gyro.z += integralFBz;
     }
     else
     {
@@ -183,22 +184,22 @@ void sensfusion6UpdateQ(float gx, float gy, float gz, float ax, float ay, float 
     }
 
     // Apply proportional feedback
-    gx += twoKp * halfex;
-    gy += twoKp * halfey;
-    gz += twoKp * halfez;
+    gyro.x += twoKp * halfex;
+    gyro.y += twoKp * halfey;
+    gyro.z += twoKp * halfez;
   }
 
   // Integrate rate of change of quaternion
-  gx *= (0.5f * dt);   // pre-multiply common factors
-  gy *= (0.5f * dt);
-  gz *= (0.5f * dt);
+  gyro.x *= (0.5f * dt);   // pre-multiply common factors
+  gyro.y *= (0.5f * dt);
+  gyro.z *= (0.5f * dt);
   qa = q0;
   qb = q1;
   qc = q2;
-  q0 += (-qb * gx - qc * gy - q3 * gz);
-  q1 += (qa * gx + qc * gz - q3 * gy);
-  q2 += (qa * gy - qb * gz + q3 * gx);
-  q3 += (qa * gz + qb * gy - qc * gx);
+  q0 += (-qb * gyro.x - qc * gyro.y - q3 * gyro.z);
+  q1 += (qa * gyro.x + qc * gyro.z - q3 * gyro.y);
+  q2 += (qa * gyro.y - qb * gyro.z + q3 * gyro.x);
+  q3 += (qa * gyro.z + qb * gyro.y - qc * gyro.x);
 
   // Normalise quaternion
   recipNorm = invSqrt(q0 * q0 + q1 * q1 + q2 * q2 + q3 * q3);
@@ -209,7 +210,8 @@ void sensfusion6UpdateQ(float gx, float gy, float gz, float ax, float ay, float 
 }
 #endif
 
-void sensfusion6GetEulerRPY(float* roll, float* pitch, float* yaw)
+//void sensfusion6GetEulerRPY(float* roll, float* pitch, float* yaw)
+void sensfusion6GetEulerRPY(pEULER_ANGLE euler)
 {
   float gx, gy, gz; // estimated gravity direction
 
@@ -220,12 +222,12 @@ void sensfusion6GetEulerRPY(float* roll, float* pitch, float* yaw)
   if (gx>1) gx=1;
   if (gx<-1) gx=-1;
 
-  *yaw = atan2(2*(q0*q3 + q1*q2), q0*q0 + q1*q1 - q2*q2 - q3*q3) * 180 / M_PI;
-  *pitch = asin(gx) * 180 / M_PI; //Pitch seems to be inverted
-  *roll = atan2(gy, gz) * 180 / M_PI;
+  euler->yaw = atan2(2*(q0*q3 + q1*q2), q0*q0 + q1*q1 - q2*q2 - q3*q3) * 180 / M_PI;
+  euler->pitch = asin(gx) * 180 / M_PI; //Pitch seems to be inverted
+  euler->roll = atan2(gy, gz) * 180 / M_PI;
 }
 
-float sensfusion6GetAccZWithoutGravity(const float ax, const float ay, const float az)
+float sensfusion6GetAccZWithoutGravity(const Axis3f acc)
 {
   float gx, gy, gz; // estimated gravity direction
 
@@ -235,7 +237,7 @@ float sensfusion6GetAccZWithoutGravity(const float ax, const float ay, const flo
 
   // return vertical acceleration without gravity
   // (A dot G) / |G| - 1G (|G| = 1) -> (A dot G) - 1G
-  return ((ax*gx + ay*gy + az*gz) - 1.0);
+  return ((acc.x*gx + acc.y*gy + acc.z*gz) - 1.0);
 }
 //---------------------------------------------------------------------------------------------------
 // Fast inverse square-root

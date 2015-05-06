@@ -18,6 +18,7 @@
 #include <signal.h>
 #include <sys/time.h>
 //#include "timer.h"
+#include <iomanip>		//控制cout输出格式
 
 #include "pigpio.h"
 

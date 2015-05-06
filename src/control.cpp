@@ -16,22 +16,19 @@ int32_t pwmMin = 160;
 float speedFeedback=0;
 float speedDesired=0;
 
-Axis3f gyro; // Gyro axis data in deg/s
-Axis3f acc;  // Accelerometer axis data in mG
-Axis3f magnetometer;  // Magnetometer axis data in testla
-
-float accWZ     = 0.0;
-float accMAG    = 0.0;
-
+#if 0
 float eulerRollActual;
 float eulerPitchActual;
 float eulerYawActual;
+#endif
 
 float eulerPitchDesired;
 float pitchDesired;
 
 float speedOutput=0;
 int32_t pwmOutput;
+
+int count = 0;
 
 static inline int32_t saturateSignedInt16(float in);
 
@@ -56,7 +53,7 @@ void pidControl()
 	// Update PID for pitch axis
 	  pidSetDesired(&pidPitch, eulerPitchDesired);
 	  //pidSetDesired(&pidPitch, speedOutput);
-	  pitchDesired = pidUpdate(&pidPitch, eulerPitchActual, true);
+	  pitchDesired = pidUpdate(&pidPitch, imu.euler.pitch, true);
 }
 
 void motorControl()
@@ -87,33 +84,53 @@ void motorControl()
 		}
 	}
 #endif
-#if 0
-	if(pwmMin > 0)
-	{
-		if(pwmOutput < 80)
-		{
-			pwmOutput = 0;
-		}
-		else if (pwmOutput < 160)
-		{
-			pwmOutput = 160;
-		}
-	}
-	else
-	{
-		if(pwmOutput > -80)
-		{
-			pwmOutput = 0;
-		}
-		else if (pwmOutput > -160)
-		{
-			pwmOutput = -160;
-		}
-	}
-#endif
+
 	motorSetSpeed(&motorL, pwmOutput);
 	motorSetSpeed(&motorR, pwmOutput);
 }
+
+
+/*static*/
+void controlUpdate(union sigval v)
+{
+#if 0	//用于示波器观测定时器
+	if(count)
+    {
+        count = 0;
+        gpioWrite(PIN_SIG, 1);
+    }
+    else
+    {
+        count = 1;
+        gpioWrite(PIN_SIG, 0);
+    }
+
+    //v.sival_ptr 就是创建timer时传进来的指针，最后在合适的地方删除一下timer
+    //myclass *ptr = (myclass*)v.sival_ptr;
+    //timer_delete(audiotrack->fade_in_timer);
+    //printf("call back func\r\n");
+    //timer_delete(&fade_in_timer);
+#endif
+
+	imuUpdate();
+	printImuData();
+
+	pidControl();
+
+	pitchDesired = imu.euler.pitch * pidPitch.kp + imu.gyro.x * pidPitch.kd;
+
+	motorControl();
+
+	/*
+	 controllerCorrectAttitudePID(eulerRollActual, eulerPitchActual, eulerYawActual,
+	 eulerRollDesired, eulerPitchDesired, -eulerYawDesired,
+	 &rollRateDesired, &pitchRateDesired, &yawRateDesired);
+	 */
+
+	printImuData();
+	printf("\r");
+}
+
 
 static inline int32_t saturateSignedInt16(float in)
 {

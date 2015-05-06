@@ -26,9 +26,8 @@
 #ifndef SENSORFUSION6_H_
 #define SENSORFUSION6_H_
 
-void sensfusion6UpdateQ(float gx, float gy, float gz, float ax, float ay, float az, float dt);
-void sensfusion6GetEulerRPY(float* roll, float* pitch, float* yaw);
-float sensfusion6GetAccZWithoutGravity(const float ax, const float ay, const float az);
-
+void sensfusion6UpdateQ(Axis3f gyro,Axis3f acc, float dt);
+void sensfusion6GetEulerRPY(pEULER_ANGLE euler);
+float sensfusion6GetAccZWithoutGravity(const Axis3f acc);
 
 #endif /* SENSORFUSION6_H_ */
