@@ -31,6 +31,8 @@
 #include "imu.h"
 #include "pwm.h"
 #include "pid.h"
+#include "timer.h"
+#include "control.h"
 
 #define TRUE (1)
 #define FALSE (0)
