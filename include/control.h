@@ -36,21 +36,27 @@
 #define PID_PITCH_KD  0.0
 #define PID_PITCH_INTEGRATION_LIMIT   20.0
 
-extern PidObject pidPitch;
-extern PidObject pidSpeed;
+typedef struct _BALANCE_CONTROL
+{
+	float Kp;
+	float Ki;
+	float Kd;
 
-extern float accWZ;
-extern float accMAG;
+	float pitchRef;
+	float pitchFdb;
 
-extern float eulerRollActual;
-extern float eulerPitchActual;
-extern float eulerYawActual;
+	float speedRef;
+	float speedFdb;
 
-extern float eulerPitchDesired;
-extern float pitchDesired;
+	PidObject pidPitch;	//平衡控制PID
+	PidObject pidSpeed;	//速度控制PID
 
-extern float speedOutput;
-extern int32_t pwmOutput;
+	int32_t PwmLeft;
+	int32_t PwmRight;
+
+}BALANCE_CONTROL, *pBALANCE_CONTROL;
+
+extern BALANCE_CONTROL balanceControl;
 
 extern void pidInit();
 extern void pidControl();

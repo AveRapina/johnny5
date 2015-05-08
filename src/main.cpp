@@ -24,6 +24,10 @@ static float yawRateDesired;
 
 using namespace std;
 
+extern float error, lastError, sum, pTerm, iTerm, dTerm;
+extern float error2, lastError2, sum2, pTerm2, iTerm2, dTerm2;
+extern float setAngle, angleOffset;
+
 int main()
 {
 	gpioInitialise();	//初始化 PiGpio
@@ -35,7 +39,7 @@ int main()
 	imu6Init();			//初始化传感器
 	imu6Test();			//传感器自检
 
-    int a;
+    float a;
     cin >> a;
 
     motorEnable(&motorL);	//左电机使能
@@ -43,32 +47,33 @@ int main()
 
     timerInit();		//初始化计时器
 
-    //cin >> a;
+    balanceControl.Kp = 1;
+    balanceControl.Ki = 0;
+    balanceControl.Kd = 0;
 
-    while(a>0)
+    while(a != 200)
     {
-    	int Kp,Ki,Kd,angle;
+    	cout<<endl;
+    	cin >> a;
+    	balanceControl.Kp = a;
+    	//pidSetKp(&balanceControl.pidPitch, a);
+    	//pidSetKp(&balanceControl.pidSpeed, a);
 
-    	cout<<"Kp:\r\n";
-    	cin>>Kp;
-    	cout<<"Ki:\r\n";
-    	cin>>Ki;
-    	//cout<<"Kd:\r\n";
-    	//cin>>Kd;
+    	cin >> a;
+    	balanceControl.Kd = a;
 
-    	//cout<<"pwmMin:\r\n";
-    	//cin>>pwmMin;
+    	cin >> a;
+    	//balanceControl.Ki = a;
+    	angleOffset = a;
+    	//pidSetKi(&balanceControl.pidPitch, a);
+    	//pidSetKi(&balanceControl.pidSpeed, a);
 
-    	cout<<"Angle:\r\n";
-    	cin>>angle;
+    	sum=0;
+    	sum2=0;
 
-    	pidReset(&pidPitch);
-    	pidInit(&pidPitch, angle, Kp, Ki, Kd, IMU_UPDATE_DT/2);
-
-    	cout<<"Continue?:\r\n";
-    	cin>>a;
+    	lastError = 0;
+    	lastError2=0;
     }
-
     motorTerminate();
     //gpioTerminate();
 

@@ -7,26 +7,8 @@
 
 #include "header.h"
 
-PidObject pidPitch;
-PidObject pidSpeed;
 
-int32_t pwmMin = 160;
-
-
-float speedFeedback=0;
-float speedDesired=0;
-
-#if 0
-float eulerRollActual;
-float eulerPitchActual;
-float eulerYawActual;
-#endif
-
-float eulerPitchDesired;
-float pitchDesired;
-
-float speedOutput=0;
-int32_t pwmOutput;
+BALANCE_CONTROL balanceControl;
 
 int count = 0;
 
@@ -34,59 +16,91 @@ static inline int32_t saturateSignedInt16(float in);
 
 void pidInit()
 {
-	pidReset(&pidPitch);
-	pidInit(&pidPitch, 0, 200, 2, PID_PITCH_KD, IMU_UPDATE_DT/2);
-	pidSetIntegralLimit(&pidPitch, PID_PITCH_INTEGRATION_LIMIT);
+	pidReset(&balanceControl.pidPitch);
+	pidInit(&balanceControl.pidPitch, 0, 1, 0, PID_PITCH_KD, IMU_UPDATE_DT/2);
+	pidSetIntegralLimit(&balanceControl.pidPitch, PID_PITCH_INTEGRATION_LIMIT);
 
-	pidReset(&pidSpeed);
-	pidInit(&pidSpeed, -10000, PID_PITCH_KP, PID_PITCH_KI, PID_PITCH_KD, IMU_UPDATE_DT/2);
-	pidSetIntegralLimit(&pidSpeed, PID_PITCH_INTEGRATION_LIMIT);
+	pidReset(&balanceControl.pidSpeed);
+	pidInit(&balanceControl.pidSpeed, 0, 1, 0, PID_PITCH_KD, IMU_UPDATE_DT/2);
+	pidSetIntegralLimit(&balanceControl.pidSpeed, PID_PITCH_INTEGRATION_LIMIT);
 }
+
+float error=0, lastError=0, sum=0, pTerm=0, iTerm=0, dTerm=0;
+float error2=0, lastError2=0, sum2=0, pTerm2=0, iTerm2=0, dTerm2=0;
+float setAngle=0;
+float angleOffset=0;
 
 void pidControl()
 {
-	speedFeedback = (pwmOutput/16/4) * MATH_PI * 0.114;
+#if 0
+	float out;
 
-	  pidSetDesired(&pidSpeed, speedDesired);
-	  speedOutput = pidUpdate(&pidPitch, speedFeedback, true);
+	pidSetDesired(&balanceControl.pidSpeed, 0);	//设定目标值
+	out = pidUpdate(&balanceControl.pidPitch, balanceControl.PwmLeft, true)/16000;				//计算PID
 
-	// Update PID for pitch axis
-	  pidSetDesired(&pidPitch, eulerPitchDesired);
-	  //pidSetDesired(&pidPitch, speedOutput);
-	  pitchDesired = pidUpdate(&pidPitch, imu.euler.pitch, true);
+	pidSetDesired(&balanceControl.pidPitch, out);	//设定目标值
+	balanceControl.PwmLeft = pidUpdate(&balanceControl.pidPitch, imu.euler.pitch/45, true)*16000;	//计算PID
+
+
+	//balanceControl.PwmLeft = out - balanceControl.Kd * imu.gyro.y;
+
+	//balanceControl.PwmLeft = balanceControl.Kp * imu.euler.pitch + balanceControl.Kd * imu.gyro.y;
+
+	//printf("Pitch:%12f Gyro x:%12f y:%12f z:%12f PWM:%d ",imu.euler.pitch, imu.gyro.x, imu.gyro.y, imu.gyro.z, balanceControl.PwmLeft);
+	printf("Pitch:%12f Gyro y:%12f PWM:%d  ",imu.euler.pitch, imu.gyro.y, balanceControl.PwmLeft);
+	printf("Desired:%12f Error:%12f Kp:%12f Kd:%12f\r", balanceControl.pidPitch.desired, balanceControl.pidPitch.error, balanceControl.pidPitch.kp, balanceControl.Kd);
+#endif
+
+#define MAX (32000)
+#define MAX2 (32000)
+
+	error2 = balanceControl.PwmLeft;
+
+	pTerm2 = balanceControl.Kp * error2;
+
+	sum2 += error2;
+	if(sum2> MAX2){ sum2 = MAX2; }
+	if(sum2< -MAX2){ sum2 = -MAX2; }
+
+	iTerm2 = balanceControl.Ki * sum2 * IMU_UPDATE_DT/2;
+
+	dTerm2 = balanceControl.Kd * (error2 - lastError2) / IMU_UPDATE_DT/2;
+
+	setAngle = pTerm2 + iTerm2 + dTerm2;
+
+	if(setAngle> MAX2){ setAngle = MAX2; }
+	if(setAngle< -MAX2){ setAngle = -MAX2; }
+
+	lastError2 = error2;
+
+
+
+	error = (setAngle+angleOffset) - imu.euler.pitch;
+
+	pTerm = balanceControl.Kp * error;
+
+	sum += error;
+	if(sum> MAX2){ sum = MAX2; }
+	if(sum< -MAX2){ sum = -MAX2; }
+
+	iTerm = balanceControl.Ki * sum * IMU_UPDATE_DT/2;
+
+	dTerm = balanceControl.Kd * (error - lastError) / IMU_UPDATE_DT/2;
+
+	balanceControl.PwmLeft = pTerm + iTerm + dTerm;
+
+	if(balanceControl.PwmLeft > MAX){ balanceControl.PwmLeft = MAX; }
+	if(balanceControl.PwmLeft < -MAX){ balanceControl.PwmLeft = -MAX; }
+
+	lastError = error;
+
+	printf("pitch:%12f PWM:%d setAngle:%12f | sum1:%12f lastError:%12f | sum2:%12f lastError2:%12f | Kp:%4f Ki:%4f Kd:%4f\r", imu.euler.pitch, balanceControl.PwmLeft, setAngle, sum, lastError, sum2, lastError2, balanceControl.Kp, balanceControl.Ki, balanceControl.Kd);
 }
 
 void motorControl()
 {
-	pwmOutput = saturateSignedInt16(pitchDesired);
-
-#if 1
-	if(pwmOutput > 0)
-	{
-		if(pwmOutput < pwmMin)
-		{
-			pwmOutput = 0;
-		}
-		else if (pwmOutput < pwmMin*2)
-		{
-			pwmOutput = pwmMin*2;
-		}
-	}
-	else
-	{
-		if(pwmOutput > -pwmMin)
-		{
-			pwmOutput = 0;
-		}
-		else if (pwmOutput > -pwmMin*2)
-		{
-			pwmOutput = -pwmMin*2;
-		}
-	}
-#endif
-
-	motorSetSpeed(&motorL, pwmOutput);
-	motorSetSpeed(&motorR, pwmOutput);
+	motorSetSpeed(&motorL, -balanceControl.PwmLeft);
+	motorSetSpeed(&motorR, balanceControl.PwmLeft);
 }
 
 
@@ -104,33 +118,16 @@ void controlUpdate(union sigval v)
         count = 1;
         gpioWrite(PIN_SIG, 0);
     }
-
-    //v.sival_ptr 就是创建timer时传进来的指针，最后在合适的地方删除一下timer
-    //myclass *ptr = (myclass*)v.sival_ptr;
-    //timer_delete(audiotrack->fade_in_timer);
-    //printf("call back func\r\n");
-    //timer_delete(&fade_in_timer);
 #endif
 
 	imuUpdate();
-	printImuData();
+	//printImuData();
 
 	pidControl();
 
-	pitchDesired = imu.euler.pitch * pidPitch.kp + imu.gyro.x * pidPitch.kd;
 
 	motorControl();
-
-	/*
-	 controllerCorrectAttitudePID(eulerRollActual, eulerPitchActual, eulerYawActual,
-	 eulerRollDesired, eulerPitchDesired, -eulerYawDesired,
-	 &rollRateDesired, &pitchRateDesired, &yawRateDesired);
-	 */
-
-	printImuData();
-	printf("\r");
 }
-
 
 static inline int32_t saturateSignedInt16(float in)
 {
