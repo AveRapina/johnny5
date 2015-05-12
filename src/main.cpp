@@ -34,7 +34,7 @@ int main()
     gpioSetMode(PIN_SIG, PI_OUTPUT);	/*设置信号管脚 用于示波器测量*/
 	motorInit();		//初始化电机控制管脚及PWM模块
 
-	pidInit();			//初始化PID
+	initPidControl();	//初始化PID
 
 	imu6Init();			//初始化传感器
 	imu6Test();			//传感器自检
@@ -46,33 +46,30 @@ int main()
     motorEnable(&motorR);	//右电机使能
 
     timerInit();		//初始化计时器
-
+#if 0
     balanceControl.Kp = 1;
     balanceControl.Ki = 0;
     balanceControl.Kd = 0;
-
+#endif
     while(a != 200)
     {
     	cout<<endl;
     	cin >> a;
-    	balanceControl.Kp = a;
+    	balanceControl.pidPitch.Kp = a;
     	//pidSetKp(&balanceControl.pidPitch, a);
     	//pidSetKp(&balanceControl.pidSpeed, a);
 
     	cin >> a;
-    	balanceControl.Kd = a;
+    	balanceControl.pidPitch.Ki = a;
 
     	cin >> a;
     	//balanceControl.Ki = a;
     	angleOffset = a;
+        balanceControl.pidPitch.desired = a;
     	//pidSetKi(&balanceControl.pidPitch, a);
     	//pidSetKi(&balanceControl.pidSpeed, a);
-
-    	sum=0;
-    	sum2=0;
-
-    	lastError = 0;
-    	lastError2=0;
+        pidReset(&balanceControl.pidPitch);
+        pidReset(&balanceControl.pidSpeed);
     }
     motorTerminate();
     //gpioTerminate();

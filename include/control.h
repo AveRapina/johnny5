@@ -48,8 +48,8 @@ typedef struct _BALANCE_CONTROL
 	float speedRef;
 	float speedFdb;
 
-	PidObject pidPitch;	//平衡控制PID
-	PidObject pidSpeed;	//速度控制PID
+	PID pidPitch;	//平衡控制PID
+	PID pidSpeed;	//速度控制PID
 
 	int32_t PwmLeft;
 	int32_t PwmRight;
@@ -58,7 +58,7 @@ typedef struct _BALANCE_CONTROL
 
 extern BALANCE_CONTROL balanceControl;
 
-extern void pidInit();
+extern void initPidControl();
 extern void pidControl();
 extern void motorControl();
 

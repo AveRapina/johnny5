@@ -13,88 +13,60 @@ BALANCE_CONTROL balanceControl;
 int count = 0;
 
 static inline int32_t saturateSignedInt16(float in);
-
-void pidInit()
-{
-	pidReset(&balanceControl.pidPitch);
-	pidInit(&balanceControl.pidPitch, 0, 1, 0, PID_PITCH_KD, IMU_UPDATE_DT/2);
-	pidSetIntegralLimit(&balanceControl.pidPitch, PID_PITCH_INTEGRATION_LIMIT);
-
-	pidReset(&balanceControl.pidSpeed);
-	pidInit(&balanceControl.pidSpeed, 0, 1, 0, PID_PITCH_KD, IMU_UPDATE_DT/2);
-	pidSetIntegralLimit(&balanceControl.pidSpeed, PID_PITCH_INTEGRATION_LIMIT);
-}
-
-float error=0, lastError=0, sum=0, pTerm=0, iTerm=0, dTerm=0;
-float error2=0, lastError2=0, sum2=0, pTerm2=0, iTerm2=0, dTerm2=0;
-float setAngle=0;
 float angleOffset=0;
 
+void initPidControl()
+{
+	pidInit(&balanceControl.pidPitch);
+	pidInit(&balanceControl.pidSpeed);
+
+#if 0
+	balanceControl.pidPitch.outMax = 64000;
+	balanceControl.pidPitch.outMin = -64000;
+
+	balanceControl.pidPitch.iMax = 640000;
+	balanceControl.pidPitch.iMin = -640000;
+#endif
+}
+
+static float currendSpeed=0;
+static float position=0;
 void pidControl()
 {
+	#if 1
+	//balanceControl.pidPitch.desired  = pidUpdate(&balanceControl.pidSpeed, balanceControl.PwmLeft) + angleOffset;
+	balanceControl.PwmLeft = pidUpdate(&balanceControl.pidPitch, imu.euler.pitch);
+	currendSpeed = (currendSpeed + balanceControl.PwmLeft * 0.004) * 0.999;
+	balanceControl.PwmLeft += currendSpeed;
+	#endif
+	//balanceControl.pidPitch.desired  = pidUpdate(&balanceControl.pidSpeed, balanceControl.PwmLeft) + angleOffset;
+	//balanceControl.PwmLeft = pidUpdate(&balanceControl.pidPitch, imu.euler.pitch);
+	
+	//Kp:5 Kd:1 offset:-3   20/10/-6  0.5/0.2/06
+	//balanceControl.PwmLeft = -(1000*(balanceControl.pidPitch.Kp * ((imu.euler.pitch+angleOffset) /90)) + balanceControl.pidPitch.Ki * imu.gyro.y);
+
 #if 0
-	float out;
+	currendSpeed *= 0.7;
+	currendSpeed = currendSpeed + balanceControl.PwmLeft * 0.3;
+	position += currendSpeed;
 
-	pidSetDesired(&balanceControl.pidSpeed, 0);	//设定目标值
-	out = pidUpdate(&balanceControl.pidPitch, balanceControl.PwmLeft, true)/16000;				//计算PID
+	if(position<-60000) position = -60000;
+	if(position> 60000) position =  60000;	
+	
+	balanceControl.PwmLeft = balanceControl.pidPitch.Kp*(imu.euler.pitch - angleOffset)
+							-balanceControl.pidPitch.Ki*position
+							-balanceControl.pidPitch.Kd*currendSpeed;
 
-	pidSetDesired(&balanceControl.pidPitch, out);	//设定目标值
-	balanceControl.PwmLeft = pidUpdate(&balanceControl.pidPitch, imu.euler.pitch/45, true)*16000;	//计算PID
+	balanceControl.PwmLeft = -balanceControl.PwmLeft;
 
-
-	//balanceControl.PwmLeft = out - balanceControl.Kd * imu.gyro.y;
-
-	//balanceControl.PwmLeft = balanceControl.Kp * imu.euler.pitch + balanceControl.Kd * imu.gyro.y;
-
-	//printf("Pitch:%12f Gyro x:%12f y:%12f z:%12f PWM:%d ",imu.euler.pitch, imu.gyro.x, imu.gyro.y, imu.gyro.z, balanceControl.PwmLeft);
-	printf("Pitch:%12f Gyro y:%12f PWM:%d  ",imu.euler.pitch, imu.gyro.y, balanceControl.PwmLeft);
-	printf("Desired:%12f Error:%12f Kp:%12f Kd:%12f\r", balanceControl.pidPitch.desired, balanceControl.pidPitch.error, balanceControl.pidPitch.kp, balanceControl.Kd);
+	if(balanceControl.PwmLeft<-60000) balanceControl.PwmLeft = -60000;
+	if(balanceControl.PwmLeft> 60000) balanceControl.PwmLeft =  60000;	
 #endif
 
-#define MAX (32000)
-#define MAX2 (32000)
-
-	error2 = balanceControl.PwmLeft;
-
-	pTerm2 = balanceControl.Kp * error2;
-
-	sum2 += error2;
-	if(sum2> MAX2){ sum2 = MAX2; }
-	if(sum2< -MAX2){ sum2 = -MAX2; }
-
-	iTerm2 = balanceControl.Ki * sum2 * IMU_UPDATE_DT/2;
-
-	dTerm2 = balanceControl.Kd * (error2 - lastError2) / IMU_UPDATE_DT/2;
-
-	setAngle = pTerm2 + iTerm2 + dTerm2;
-
-	if(setAngle> MAX2){ setAngle = MAX2; }
-	if(setAngle< -MAX2){ setAngle = -MAX2; }
-
-	lastError2 = error2;
-
-
-
-	error = (setAngle+angleOffset) - imu.euler.pitch;
-
-	pTerm = balanceControl.Kp * error;
-
-	sum += error;
-	if(sum> MAX2){ sum = MAX2; }
-	if(sum< -MAX2){ sum = -MAX2; }
-
-	iTerm = balanceControl.Ki * sum * IMU_UPDATE_DT/2;
-
-	dTerm = balanceControl.Kd * (error - lastError) / IMU_UPDATE_DT/2;
-
-	balanceControl.PwmLeft = pTerm + iTerm + dTerm;
-
-	if(balanceControl.PwmLeft > MAX){ balanceControl.PwmLeft = MAX; }
-	if(balanceControl.PwmLeft < -MAX){ balanceControl.PwmLeft = -MAX; }
-
-	lastError = error;
-
-	printf("pitch:%12f PWM:%d setAngle:%12f | sum1:%12f lastError:%12f | sum2:%12f lastError2:%12f | Kp:%4f Ki:%4f Kd:%4f\r", imu.euler.pitch, balanceControl.PwmLeft, setAngle, sum, lastError, sum2, lastError2, balanceControl.Kp, balanceControl.Ki, balanceControl.Kd);
+	printf("pitch:%6.4f | Kp:%4.2f Ki:%4.2f Ref:%4.2f | error:%6.4f sumerror:%6.4f | PWM:%d\r", 
+		imu.euler.pitch, balanceControl.pidPitch.Kp, balanceControl.pidPitch.Ki, balanceControl.pidPitch.desired,
+		balanceControl.pidPitch.error, balanceControl.pidPitch.sumError, 
+		balanceControl.PwmLeft);
 }
 
 void motorControl()
