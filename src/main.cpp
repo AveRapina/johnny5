@@ -46,10 +46,11 @@ int main()
     motorEnable(&motorR);	//右电机使能
 
     timerInit();		//初始化计时器
-#if 0
-    balanceControl.Kp = 1;
-    balanceControl.Ki = 0;
-    balanceControl.Kd = 0;
+#if 1
+    balanceControl.pidPitch.Kp = 3;
+    balanceControl.pidPitch.Ki = 0;
+    balanceControl.Kd = 0.05;
+    balanceControl.pidPitch.desired = 5;
 #endif
     while(a != 200)
     {
@@ -59,8 +60,12 @@ int main()
     	//pidSetKp(&balanceControl.pidPitch, a);
     	//pidSetKp(&balanceControl.pidSpeed, a);
 
-    	cin >> a;
-    	balanceControl.pidPitch.Ki = a;
+        //cin >> a;
+        //balanceControl.pidPitch.Ki = a;
+
+        cin >> a;
+        //balanceControl.pidPitch.Ki = a;
+        balanceControl.Kd = a;
 
     	cin >> a;
     	//balanceControl.Ki = a;
