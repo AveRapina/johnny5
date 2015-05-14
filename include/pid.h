@@ -35,4 +35,8 @@ extern void pidInit(pPID pid);
 extern float pidUpdate(pPID pid, float feedback);
 extern float pidReset(pPID pid);
 
+float pidSetKp(pPID pid, float Kp);
+float pidSetKi(pPID pid, float Ki);
+float pidSetKd(pPID pid, float Kd);
+
 #endif /* INCLUDE_PID_H_ */

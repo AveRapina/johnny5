@@ -14,7 +14,7 @@ void pidInit(pPID pid)
   pid->outMax =  64000;
   pid->outMin = -64000;
 
-  pid->dt = 1/FREQ;
+  pid->dt = (float)1/FREQ;
 }
 
 float pidUpdate(pPID pid, float feedback)
@@ -53,3 +53,17 @@ float pidReset(pPID pid)
   pid->derivative = 0;
 }
 
+float pidSetKp(pPID pid, float Kp)
+{
+  pid->Kp = Kp;
+}
+
+float pidSetKi(pPID pid, float Ki)
+{
+  pid->Ki = Ki;
+}
+
+float pidSetKd(pPID pid, float Kd)
+{
+  pid->Kd = Kd;
+}

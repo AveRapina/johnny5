@@ -22,6 +22,8 @@
 
 #include "pigpio.h"
 
+#include "Kalman.h"
+
 #include "i2cdev.h"
 #include "imu_types.h"
 #include "filter.h"
@@ -34,6 +36,7 @@
 #include "pid.h"
 #include "timer.h"
 #include "control.h"
+
 
 #define TRUE (1)
 #define FALSE (0)

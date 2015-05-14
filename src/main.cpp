@@ -34,10 +34,10 @@ int main()
     gpioSetMode(PIN_SIG, PI_OUTPUT);	/*设置信号管脚 用于示波器测量*/
 	motorInit();		//初始化电机控制管脚及PWM模块
 
-	initPidControl();	//初始化PID
-
-	imu6Init();			//初始化传感器
+    imu6Init();			//初始化传感器
 	imu6Test();			//传感器自检
+
+    initPidControl();   //初始化PID
 
     float a;
     cin >> a;
@@ -47,32 +47,34 @@ int main()
 
     timerInit();		//初始化计时器
 #if 1
-    balanceControl.pidPitch.Kp = 3;
-    balanceControl.pidPitch.Ki = 0;
-    balanceControl.Kd = 0.05;
+    balanceControl.pidPitch.Kp = 1500;
+    balanceControl.pidPitch.Ki = 1000;
+    balanceControl.Kd = 5;
     balanceControl.pidPitch.desired = 5;
 #endif
     while(a != 200)
     {
     	cout<<endl;
     	cin >> a;
-    	balanceControl.pidPitch.Kp = a;
-    	//pidSetKp(&balanceControl.pidPitch, a);
+    	//balanceControl.pidPitch.Kp = a;
+    	pidSetKp(&balanceControl.pidPitch, a);
     	//pidSetKp(&balanceControl.pidSpeed, a);
-
-        //cin >> a;
-        //balanceControl.pidPitch.Ki = a;
 
         cin >> a;
         //balanceControl.pidPitch.Ki = a;
+        pidSetKi(&balanceControl.pidPitch, a);
+        //pidSetKi(&balanceControl.pidSpeed, a);
+
+        cin >> a;
+        //balanceControl.pidPitch.Kd = a;
         balanceControl.Kd = a;
+        //pidSetKd(&balanceControl.pidPitch, a);
+        //pidSetKd(&balanceControl.pidSpeed, a);
 
     	cin >> a;
-    	//balanceControl.Ki = a;
     	angleOffset = a;
         balanceControl.pidPitch.desired = a;
-    	//pidSetKi(&balanceControl.pidPitch, a);
-    	//pidSetKi(&balanceControl.pidSpeed, a);
+
         pidReset(&balanceControl.pidPitch);
         pidReset(&balanceControl.pidSpeed);
     }

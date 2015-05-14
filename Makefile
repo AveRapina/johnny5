@@ -12,6 +12,7 @@ SOURCES = ./src/main.cpp \
 		./dev/src/sensfusion6.cpp \
 		./src/pid.cpp \
 		./src/timer.cpp \
+		./src/Kalman.cpp \
 		./src/control.cpp
 		#./dev/src/ms5611.cpp
 
