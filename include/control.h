@@ -38,6 +38,7 @@
 
 typedef struct _BALANCE_CONTROL
 {
+	//param
 	float Kp;
 	float Ki;
 	float Kd;
@@ -48,9 +49,17 @@ typedef struct _BALANCE_CONTROL
 	float speedRef;
 	float speedFdb;
 
+	float factorL;
+	float factorR;
+
+	float spinSpeed;
+
+	//var
 	PID pidPitch;	//平衡控制PID
 	PID pidSpeed;	//速度控制PID
 
+	//output
+	float speed;
 	int32_t PwmLeft;
 	int32_t PwmRight;
 

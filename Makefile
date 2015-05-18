@@ -10,6 +10,7 @@ SOURCES = ./src/main.cpp \
 		./dev/src/i2cdev.cpp \
 		./dev/src/imu.cpp \
 		./dev/src/sensfusion6.cpp \
+		./dev/src/joystick.cpp \
 		./src/pid.cpp \
 		./src/timer.cpp \
 		./src/Kalman.cpp \

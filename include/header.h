@@ -36,6 +36,7 @@
 #include "pid.h"
 #include "timer.h"
 #include "control.h"
+#include "joystick.h"
 
 
 #define TRUE (1)

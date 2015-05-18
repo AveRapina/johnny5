@@ -7,27 +7,19 @@
 
 #include "header.h"
 
+#define JOYSTICK_AXIS_MAX (0x7FFF)
+#define JOYSTICK_AXIS_MIN (-0x7FFF)
 
 BALANCE_CONTROL balanceControl;
 Kalman kalmanPitch;
 
 int count = 0;
 
-/* Kalman filter variables and constants */ 
-const float Q_angle = 0.001; // Process noise covariance for the accelerometer - Sw 
-const float Q_gyro = 0.003; // Process noise covariance for the gyro - Sw 
-const float R_angle = 0.03; // Measurement noise covariance - Sv 
-
-static double angle = 120; // It starts at 180 degrees 
-static double bias = 0; 
-static double P_00 = 0, P_01 = 0, P_10 = 0, P_11 = 0; 
-static double dt, y, S; 
-static double K_0, K_1; 
-
-double kalman(double newAngle, double newRate, double dtime);
-
 static inline int32_t saturateSignedInt16(float in);
+void joystickControl();
+
 float angleOffset=0;
+extern Joystick* joystick;
 
 void initPidControl()
 {
@@ -43,6 +35,9 @@ void initPidControl()
 #endif
 
 	kalmanPitch.setAngle(imu.euler.pitch);
+	balanceControl.factorL = 1;
+	balanceControl.factorR = 1;
+	balanceControl.spinSpeed = 0;
 }
 
 static float currendSpeed=0;
@@ -111,29 +106,35 @@ void pidControl()
 	}
 #endif
 #if 1
+	balanceControl.speed = balanceControl.speed * 0.05 + pidUpdate(&balanceControl.pidSpeed, balanceControl.speed) * 0.95;
+
 	gyroFiltered = 0.05 * imu.gyro.y + gyroFiltered * 0.95;
 	//angleFiltered = 0.2 * imu.euler.pitch + angleFiltered * 0.8;
 	//angleFiltered = kalmanPitch.getAngle(imu.euler.pitch, imu.gyro.y/131.0, (double)1/250);
 	//angleFiltered = kalman(imu.euler.pitch, imu.gyro.y, (double)1/FREQ);
 
-	balanceControl.PwmLeft = pidUpdate(&balanceControl.pidPitch, angleFiltered) + gyroFiltered * balanceControl.Kd;
+	balanceControl.speed += pidUpdate(&balanceControl.pidPitch, angleFiltered) + gyroFiltered * balanceControl.Kd;
 	//balanceControl.PwmLeft = pidUpdate(&balanceControl.pidPitch, imu.euler.pitch);
 
-	if(balanceControl.PwmLeft < 100 && balanceControl.PwmLeft > -100) { balanceControl.PwmLeft = 0; }  //dead-band of PWM
+	if(balanceControl.speed < 100 && balanceControl.speed > -100) { balanceControl.speed = 0; }  //dead-band of PWM
+
 #endif
 	//printf("dev:%6.4f ", balanceControl.pidPitch.derivative);
 	printf("angleF:%6.4f pitch:%6.4f gyroY:%6.4f ", imu.euler.pitch, angleFiltered, imu.gyro.y);
-	printf("| Kp:%4.2f Ki:%4.2f Kd:%4.2f Ref:%4.2f | error:%6.4f sumerror:%6.4f | PWM:%d\r\n", 
+	printf("| Kp:%4.2f Ki:%4.2f Kd:%4.2f Ref:%4.2f | error:%6.4f sumerror:%6.4f | PWM:%6.3f\r\n", 
 		balanceControl.pidPitch.Kp, balanceControl.pidPitch.Ki, balanceControl.Kd, balanceControl.pidPitch.desired,
 		balanceControl.pidPitch.error, balanceControl.pidPitch.sumError, 
-		balanceControl.PwmLeft);
+		balanceControl.speed);
 
+	balanceControl.PwmLeft  = balanceControl.speed * balanceControl.factorL - balanceControl.spinSpeed;
+	balanceControl.PwmRight = balanceControl.speed * balanceControl.factorR + balanceControl.spinSpeed;
 }
 
 void motorControl()
 {
+
 	motorSetSpeed(&motorL, -balanceControl.PwmLeft);
-	motorSetSpeed(&motorR, balanceControl.PwmLeft);
+	motorSetSpeed(&motorR, balanceControl.PwmRight);
 }
 
 
@@ -160,6 +161,8 @@ void controlUpdate(union sigval v)
 
 
 	motorControl();
+
+	joystickControl();
 }
 
 static inline int32_t saturateSignedInt16(float in)
@@ -173,44 +176,39 @@ static inline int32_t saturateSignedInt16(float in)
     return (int32_t)in;
 }
 
-double kalman(double newAngle, double newRate, double dtime) 
+void joystickControl()
 {
-    // KasBot V2  -  Kalman filter module - http://www.arduino.cc/cgi-bin/yabb2/YaBB.pl?num=1284738418 - http://www.x-firm.com/?page_id=145
-    // with slightly modifications by Kristian Lauszus
-    // See http://academic.csuohio.edu/simond/courses/eec644/kalman.pdf and http://www.cs.unc.edu/~welch/media/pdf/kalman_intro.pdf for more information
-    //dt = dtime / 1000000; // Convert from microseconds to seconds
-    dt = dtime;
-    
-    // Discrete Kalman filter time update equations - Time Update ("Predict")
-    // Update xhat - Project the state ahead
-    angle += dt * (newRate - bias);
-    
-    printf("angle:%6.4f newAngle:%6.4f newRate:%6.4f dt:%6.4f\r", angle, newAngle, newRate, dt);
-
-    // Update estimation error covariance - Project the error covariance ahead
-    P_00 += -dt * (P_10 + P_01) + Q_angle * dt;
-    P_01 += -dt * P_11;
-    P_10 += -dt * P_11;
-    P_11 += +Q_gyro * dt;
-    
-    // Discrete Kalman filter measurement update equations - Measurement Update ("Correct")
-    // Calculate Kalman gain - Compute the Kalman gain
-    S = P_00 + R_angle;
-    K_0 = P_00 / S;
-    K_1 = P_10 / S;
-    
-    // Calculate angle and resting rate - Update estimate with measurement zk
-    y = newAngle - angle;
-    angle += K_0 * y;
-    bias += K_1 * y;
-    
-    // Calculate estimation error covariance - Update the error covariance
-    P_00 -= K_0 * P_00;
-    P_01 -= K_0 * P_01;
-    P_10 -= K_1 * P_00;
-    P_11 -= K_1 * P_01;
-    
-    return angle;
+	// Attempt to sample an event from the joystick
+    JoystickEvent event;
+    if (joystick->sample(&event))
+    {
+      if (event.isButton())
+      {
+        printf("Button %u is %s\n",
+          event.number,
+          event.value == 0 ? "up" : "down");
+      }
+      else if (event.isAxis())
+      {
+        printf("Axis %u is at position %d\n", event.number, event.value);
+		switch(event.number)
+		{
+			case 0:
+				balanceControl.spinSpeed = (float)event.value/JOYSTICK_AXIS_MAX * 3200;
+				//balanceControl.factorL = event.value/JOYSTICK_AXIS_MAX;
+				//balanceControl.factorR = 1-balanceControl.factorL;
+			break;
+			case 1:
+			break;
+			case 2:		//右手左右
+			break;
+			case 3:		//右手前后
+				//angle = axisToAngle(event.value);
+				//printf("angle %f\r\n", angle);
+				//servoSetAngle(&servoH, axisToAngle(event.value));
+				balanceControl.pidSpeed.desired = -(float)event.value/JOYSTICK_AXIS_MAX * 6400;
+			break;
+		}
+      }
+  	}
 }
-
-

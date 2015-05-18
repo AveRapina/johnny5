@@ -44,7 +44,8 @@ void pwmInit(pSERVO p)
 	gpioSetMode(p->gpioPWM, PI_OUTPUT);
 	gpioSetPWMrange(p->gpioPWM, PWM_RANGE);
 	gpioSetPWMfrequency(p->gpioPWM, PWM_FREQ);
-	gpioHardwarePWM(p->gpioPWM, 0, 0);
+	//gpioHardwarePWM(p->gpioPWM, 0, 0);
+	gpioPWM(p->gpioPWM, 0);
 }
 
 void servoInit()
@@ -163,12 +164,12 @@ int main()
         printf("Axis %u is at position %d\n", event.number, event.value);
 				switch(event.number)
 				{
-					case 3:		//左右
+					case 2:		//左右
 						angle = axisToAngle(event.value);
 						printf("angle %f\r\n", angle);
 						servoSetAngle(&servoH, axisToAngle(event.value));
 					break;
-					case 2:		//上下
+					case 3:		//上下
 						angle = axisToAngle(event.value);
 						printf("angle %f\r\n", angle);
 						servoSetAngle(&servoV, axisToAngle(event.value));

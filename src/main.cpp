@@ -28,6 +28,25 @@ extern float error, lastError, sum, pTerm, iTerm, dTerm;
 extern float error2, lastError2, sum2, pTerm2, iTerm2, dTerm2;
 extern float setAngle, angleOffset;
 
+Joystick* joystick;
+
+void initJoystick()
+{
+  // Create an instance of Joystick
+  joystick  = new Joystick("/dev/input/js2");
+
+  // Ensure that it was found and that we can use it
+  if (!joystick->isFound())
+  {
+    printf("open failed.\n");
+    exit(1);
+  }
+  else
+  {
+    printf("Joystick OK.\n");
+  }
+}
+
 int main()
 {
 	gpioInitialise();	//初始化 PiGpio
@@ -36,6 +55,8 @@ int main()
 
     imu6Init();			//初始化传感器
 	imu6Test();			//传感器自检
+
+    initJoystick();
 
     initPidControl();   //初始化PID
 
@@ -55,19 +76,21 @@ int main()
     while(a != 200)
     {
     	cout<<endl;
+
+        cin >> a;
+        balanceControl.pidSpeed.desired = a;
+
     	cin >> a;
-    	//balanceControl.pidPitch.Kp = a;
-    	pidSetKp(&balanceControl.pidPitch, a);
-    	//pidSetKp(&balanceControl.pidSpeed, a);
+    	//pidSetKp(&balanceControl.pidPitch, a);
+    	pidSetKp(&balanceControl.pidSpeed, a);
 
         cin >> a;
-        //balanceControl.pidPitch.Ki = a;
-        pidSetKi(&balanceControl.pidPitch, a);
-        //pidSetKi(&balanceControl.pidSpeed, a);
+        //pidSetKi(&balanceControl.pidPitch, a);
+        pidSetKi(&balanceControl.pidSpeed, a);
 
-        cin >> a;
+        //cin >> a;
         //balanceControl.pidPitch.Kd = a;
-        balanceControl.Kd = a;
+        //balanceControl.Kd = a;
         //pidSetKd(&balanceControl.pidPitch, a);
         //pidSetKd(&balanceControl.pidSpeed, a);
 
