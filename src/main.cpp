@@ -80,7 +80,7 @@ int main()
     balanceControl.Kd = 5;
     balanceControl.pidPitch.desired = 5;
 #endif
-#if 1
+#if 0
     balanceControl.pidPitch.Kp = 1000;
     balanceControl.pidPitch.Ki = 0;
     balanceControl.Kd = 8;
@@ -89,6 +89,17 @@ int main()
 
     balanceControl.pidSpeed.Ki = 0.005;
     balanceControl.pidSpeed.Kd = 0.5;
+#endif
+#if 1
+    balanceControl.pidPitch.Kp = 0.5;
+    balanceControl.pidPitch.Ki = 0;
+    balanceControl.Kd = 0;
+    //balanceControl.pidPitch.desired = 5;
+    angleOffset = 5;
+
+    balanceControl.pidSpeed.Kp = 0.5;
+    balanceControl.pidSpeed.Ki = 0;
+    balanceControl.pidSpeed.Kd = 0;
 #endif
 
     while(a != 200)
@@ -108,15 +119,15 @@ int main()
 
     	//pidSetKp(&balanceControl.pidPitch, a);
     	//pidSetKp(&balanceControl.pidSpeed, a);
-        cout<<"Kpos["<<balanceControl.pidSpeed.Ki<<"]:";
+        cout<<"Kpos["<<balanceControl.pidSpeed.Kp<<"]:";
         cin >> a;
-        balanceControl.pidSpeed.Ki = a;        
+        balanceControl.pidSpeed.Kp = a;        
 
         //pidSetKi(&balanceControl.pidPitch, a);
         //pidSetKi(&balanceControl.pidSpeed, a);
         cout<<"Kspeed["<<balanceControl.pidSpeed.Kd<<"]:";
         cin >> a;
-        balanceControl.pidSpeed.Kd = a;
+        balanceControl.pidSpeed.Ki = a;
 
         //balanceControl.pidPitch.Kd = a;
         //balanceControl.Kd = a;

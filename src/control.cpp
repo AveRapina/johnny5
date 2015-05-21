@@ -33,13 +33,15 @@ void initPidControl()
 	pidInit(&balanceControl.pidPitch);
 	pidInit(&balanceControl.pidSpeed);
 
-#if 0
-	balanceControl.pidPitch.outMax = 64000;
-	balanceControl.pidPitch.outMin = -64000;
+#if 1
+	//balanceControl.pidPitch.outMax = 64000;
+	//balanceControl.pidPitch.outMin = -64000;
 
-	balanceControl.pidPitch.iMax = 640000;
-	balanceControl.pidPitch.iMin = -640000;
+	balanceControl.pidPitch.iMax = 1000;
+	balanceControl.pidPitch.iMin = -1000;
 #endif
+	balanceControl.pidSpeed.iMax = 1000;
+	balanceControl.pidSpeed.iMin = -1000;
 
 	kalmanPitch.setAngle(imu.euler.pitch);
 	balanceControl.factorL = 1;
@@ -73,7 +75,7 @@ void pidControl()
 	//Kp:5 Kd:1 offset:-3   20/10/-6  0.5/0.2/06
 	balanceControl.PwmLeft = -(1000*(balanceControl.pidPitch.Kp * ((angleFiltered + angleOffset) /90)) + balanceControl.Kd * imu.gyro.y);
 #endif
-#if 1
+#if 0
 	currendSpeed *= 0.7;
 	currendSpeed = currendSpeed + balanceControl.PwmLeft * 0.3;
 	position += currendSpeed;
@@ -137,9 +139,9 @@ void pidControl()
 	if(balanceControl.speed < 0.100 && balanceControl.speed > -0.100) { balanceControl.speed = 0; }  //dead-band of PWM
 
 #endif
-#if 0
-	balanceControl.speed = (float)(balanceControl.PwmLeft + balanceControl.PwmRight)/5600;
-	balanceControl.speed = LPF(pidUpdate(&balanceControl.pidSpeed, balanceControl.speed), balanceControl.speed);
+#if 1
+	balanceControl.speed = LPF((float)(balanceControl.PwmLeft + balanceControl.PwmRight)/5600, balanceControl.speed);
+	balanceControl.speed = pidUpdate(&balanceControl.pidSpeed, balanceControl.speed);
 	balanceControl.pidPitch.desired = balanceControl.speed + angleOffset;
 	balanceControl.speed = pidUpdate(&balanceControl.pidPitch, angleFiltered) + gyroFiltered * balanceControl.Kd;
 
@@ -147,13 +149,10 @@ void pidControl()
 #endif
 
 	//printf("dev:%6.4f ", balanceControl.pidPitch.derivative);
-	printf("angleF:%6.4f pitch:%6.4f gyroY:%6.4f ", imu.euler.pitch, angleFiltered, imu.gyro.y);
-
-	printf("\t| Kp:%4.2f Ki:%4.2f Kd:%4.2f Speed:%4.2f angle:%4.2f |\t error:%6.4f sumerror:%6.4f Iterm:%6.4f | speed_need:%6.3f position:%9.1f\r\n", 
-		balanceControl.pidPitch.Kp, balanceControl.pidPitch.Ki, balanceControl.pidPitch.Kd, 
-		balanceControl.speed, balanceControl.pidPitch.desired,
-		balanceControl.pidPitch.error, balanceControl.pidPitch.sumError, balanceControl.pidPitch.intergal, 
-		speed_need, position);
+	printf("AngleSet:%4.2f AngleRef:%4.2f Angle:%4.2f error:%6.4f ", angleOffset, balanceControl.pidPitch.desired, angleFiltered, balanceControl.pidPitch.error);
+	printf("\t| Kp:%3.2f Kd:%3.3f sumerror:%6.2f", balanceControl.pidPitch.Kp, balanceControl.Kd, balanceControl.pidPitch.sumError);
+	printf("\t| Kp:%3.2f Ki:%3.3f sumerror:%6.2f", balanceControl.pidSpeed.Kp, balanceControl.pidSpeed.Ki, balanceControl.pidSpeed.sumError);
+	printf("\t| speedref:%6.2f speed%6.2f error:%6.2f\r\n", balanceControl.pidSpeed.desired, balanceControl.speed, balanceControl.pidSpeed.error);
 
 	/*
 	printf("\t| Kp:%4.2f Ki:%4.2f Kd:%4.2f Speed:%4.2f angle:%4.2f |\t error:%6.4f sumerror:%6.4f Iterm:%6.4f | PWM:%6.3f\r\n", 
@@ -163,15 +162,15 @@ void pidControl()
 		balanceControl.speed);
 	*/
 
-	//balanceControl.PwmLeft  = 2800 * (balanceControl.speed * balanceControl.factorL - balanceControl.spinSpeed);
-	//balanceControl.PwmRight = 2800 * (balanceControl.speed * balanceControl.factorR + balanceControl.spinSpeed);
+	balanceControl.PwmLeft  = 2800 * (balanceControl.speed * balanceControl.factorL - balanceControl.spinSpeed);
+	balanceControl.PwmRight = 2800 * (balanceControl.speed * balanceControl.factorR + balanceControl.spinSpeed);
 }
 
 void motorControl()
 {
 
-	motorSetSpeed(&motorL, balanceControl.PwmLeft);
-	motorSetSpeed(&motorR, -balanceControl.PwmRight);
+	motorSetSpeed(&motorL, -balanceControl.PwmLeft);
+	motorSetSpeed(&motorR, balanceControl.PwmRight);
 }
 /*static*/
 void controlUpdate(union sigval v)
@@ -244,7 +243,7 @@ void joystickControl()
 				//angle = axisToAngle(event.value);
 				//printf("angle %f\r\n", angle);
 				//servoSetAngle(&servoH, axisToAngle(event.value));
-				smonthSpeed = -(float)event.value/JOYSTICK_AXIS_MAX * 2000;
+				smonthSpeed = -(float)event.value/JOYSTICK_AXIS_MAX * 10;
 				
 				//balanceControl.pidSpeed.desired = -(float)event.value/JOYSTICK_AXIS_MAX * 5;
 			break;

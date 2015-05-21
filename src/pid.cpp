@@ -22,6 +22,9 @@ float pidUpdate(pPID pid, float feedback)
   pid->error = pid->desired - feedback;
   pid->sumError += pid->error;
 
+  if(pid->sumError > pid->iMax)  { pid->sumError = pid->iMax; }
+  if(pid->sumError < pid->iMin)  { pid->sumError = pid->iMin; }
+
   pid->proportional = pid->Kp * pid->error;
   pid->intergal     = pid->Ki * pid->sumError * pid->dt;
 
@@ -29,9 +32,6 @@ float pidUpdate(pPID pid, float feedback)
   {
     pid->derivative   = pid->Kd * (pid->error - pid->lastError) / pid->dt;
   }
-
-  if(pid->intergal > pid->iMax)  { pid->intergal = pid->iMax; }
-  if(pid->intergal < pid->iMin)  { pid->intergal = pid->iMin; }
 
   pid->output = pid->proportional + pid->intergal + pid->derivative;
 
