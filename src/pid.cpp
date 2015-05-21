@@ -9,7 +9,7 @@ void pidInit(pPID pid)
   pid->Kd = 0;
 
   pid->iMax =  128000;
-  pid->iMax = -128000;
+  pid->iMin = -128000;
 
   pid->outMax =  64000;
   pid->outMin = -64000;

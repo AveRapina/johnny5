@@ -23,6 +23,7 @@
 #include "pigpio.h"
 
 #include "Kalman.h"
+#include "kalman_filter.h"
 
 #include "i2cdev.h"
 #include "imu_types.h"

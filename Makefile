@@ -14,6 +14,7 @@ SOURCES = ./src/main.cpp \
 		./src/pid.cpp \
 		./src/timer.cpp \
 		./src/Kalman.cpp \
+		./src/kalman_filter.cpp \
 		./src/control.cpp
 		#./dev/src/ms5611.cpp
 
